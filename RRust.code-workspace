@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "RRust"
+		}
+	],
+	"settings": {
+		"rust-analyzer.cargo.allTargets": true,
+		"window.title": "RRUST (Rust) ${separator}${activeEditorShort}"
+	}
+}
