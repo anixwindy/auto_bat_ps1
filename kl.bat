@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 setlocal enabledelayedexpansion
 
 :: 1. 設定目標資料夾路徑 (維持你堅持的絕對路徑)
@@ -29,12 +30,13 @@ dir /s /b /a-d "%TARGET_DIR%\*.exe" | findstr /i /v /c:"\.venv\\" /c:"\target\\"
 echo ----------------------------------------
 
 echo [第二階段：緩衝] 請檢查清單是否正確。
-echo 如果發現不該刪的檔案，請直接""關閉視窗""或""按 Ctrl+C""。
+echo 如果發現不該刪的檔案，請直接 "關閉視窗" 或 "按 Ctrl+C"。
 echo 倒數 6秒後將啟動不可逆刪除...
 echo ========================================
 
-:: 3. 等待 6 秒 (不接受任意鍵中斷，確保有完整 6 秒反應時間)
-timeout /t 6 /nobreak
+:: 3. 等待 6 秒 (timeout 在 stdin 被重導向時會瞬間失敗，
+::    故用 || 退回 ping 計時，ping 不讀 stdin，任何啟動方式都能穩定撐 6 秒)
+timeout /t 6 /nobreak || ping -n 7 127.0.0.1 >nul
 
 
 echo ========================================
@@ -43,7 +45,7 @@ echo ========================================
 set /a count=0
 set /a skipped=0
 for /r "%TARGET_DIR%" %%f in (*.exe) do (
-    :: findstr 找到任一排除片段 -> errorlevel 0 -> 略過；找不到 -> errorlevel 1 -> 刪除
+    rem findstr 命中任一排除片段 -> errorlevel 0 -> 略過；找不到 -> errorlevel 1 -> 刪除
     echo "%%f" | findstr /i /c:"\.venv\\" /c:"\target\\" /c:"\.git\\" /c:"\node_modules\\" >nul
     if errorlevel 1 (
         echo [清理中] %%f
@@ -65,4 +67,5 @@ if %count% equ 0 (
 echo [保護] 略過受保護路徑檔案數: %skipped%
 echo ========================================
 
-timeout /t 1
+:: 結尾停住，讓你看完彙報 (pause 失效時用 ping 再撐 8 秒保底)
+pause || ping -n 9 127.0.0.1 >nul
